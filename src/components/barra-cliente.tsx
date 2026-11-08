@@ -8,17 +8,19 @@ import { accionSalir } from "@/app/acceso";
 
 // El menú vive aquí y en ningún otro sitio.
 export const NAV = [
-  { href: "/", etiqueta: "Oportunidades" },
-  { href: "/radar", etiqueta: "Radar SECOP" },
-  { href: "/buzon", etiqueta: "Buzón" },
-  { href: "/proveedores", etiqueta: "Proveedores" },
-  { href: "/criterios", etiqueta: "Criterios" },
+  { href: "/", etiqueta: "Rastrear" },
+  { href: "/reclamos", etiqueta: "Reclamos" },
+  { href: "/causacion", etiqueta: "Causación" },
+  { href: "/pagos", etiqueta: "Pagos" },
+  { href: "/pendientes", etiqueta: "Pendientes" },
+  { href: "/ica", etiqueta: "ICA por municipio" },
+  { href: "/bitacora", etiqueta: "Bitácora" },
   { href: "/usuarios", etiqueta: "Usuarios", soloAdmin: true },
 ] as const;
 
 export function BarraCliente({ agenteActivo = true, children, usuario }: { agenteActivo?: boolean; children?: ReactNode; usuario: { nombre: string; rol: string; esAdmin: boolean } | null }) {
   const ruta = usePathname();
-  const activo = (href: string) => (href === "/" ? ruta === "/" || ruta.startsWith("/oportunidades") : ruta.startsWith(href));
+  const activo = (href: string) => (href === "/" ? ruta === "/" || ruta.startsWith("/facturas") : ruta.startsWith(href));
 
   return (
     <header className="banda">

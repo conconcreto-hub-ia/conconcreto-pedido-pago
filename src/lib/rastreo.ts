@@ -7,6 +7,7 @@
 
 import type { TipoCaso, Area } from "@prisma/client";
 import { calcularRetenciones, clasificacionPorDefecto, tarifaDe, type CalidadTributaria, type ConceptoRenta, type Retencion, type TarifaIcaDato, type ResultadoRetenciones } from "./retenciones";
+import { fechaLarga } from "./formato";
 import { cruzar, bloqueantes, entradaValida, valorPedido, type Alerta, type FacturaCruce, type PedidoCruce } from "./cruce";
 
 export type CausacionRastreo = {
@@ -72,7 +73,6 @@ export const COMPRAS: Responsable = { area: "compras", nombre: "Compras", correo
 
 const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : undefined);
 const p$ = (n: number) => `$${Math.round(n).toLocaleString("es-CO")}`;
-const fechaLarga = (d: Date | string) => new Date(d).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Bogota" });
 
 export function rastrear(e: EntradaRastreo): Rastreo {
   const { factura: f, pedido, proveedor, causacion, pagos } = e;
@@ -98,11 +98,13 @@ export function rastrear(e: EntradaRastreo): Rastreo {
     pasos.push({ clave: "entrada", titulo: "Entrada o HES", estado: "no_aplica", detalle: "Sin pedido" });
   } else {
     const registradas = pedido.entradas.filter((x) => x.estado !== "anulada");
-    if (!registradas.length) {
+    if (!registradas.length && pedido.liberacion !== "liberado") {
+      pasos.push({ clave: "entrada", titulo: nombreEntrada, estado: "espera", detalle: "No se puede registrar hasta que se libere el pedido" });
+    } else if (!registradas.length) {
       pasos.push({ clave: "entrada", titulo: nombreEntrada, estado: "error", quien: esServicio ? pedido.obra.residente : pedido.obra.almacenista, detalle: esServicio ? `La obra no ha registrado la HES (responsable: ${pedido.obra.residente})` : `El almacén no ha registrado el recibo (responsable: ${pedido.obra.almacenista})` });
     } else {
-      const cant = registradas.reduce((s, x) => s + x.cantidad, 0);
-      pasos.push({ clave: "entrada", titulo: nombreEntrada, estado: "ok", documento: registradas.map((x) => x.documento).join(", "), fecha: iso(registradas[0].fecha), quien: registradas[0].registradoPor ?? undefined, detalle: `${registradas.length} ${registradas.length === 1 ? "documento" : "documentos"} · ${cant.toLocaleString("es-CO")} unidades recibidas` });
+      const completo = recibidoCompleto(pedido);
+      pasos.push({ clave: "entrada", titulo: nombreEntrada, estado: "ok", documento: registradas.map((x) => x.documento).join(", "), fecha: iso(registradas[0].fecha), quien: registradas[0].registradoPor ?? undefined, detalle: `${registradas.length === 1 ? "Un documento" : `${registradas.length} documentos`} · ${completo ? "recibido completo" : "recibo parcial"}${registradas[0].registradoPor ? ` · ${registradas[0].registradoPor}` : ""}` });
     }
     if (esServicio) {
       const acept = pedido.entradas.filter((x) => x.estado === "aceptada");
@@ -145,7 +147,8 @@ export function rastrear(e: EntradaRastreo): Rastreo {
       const c = recalculo.retenciones.find((x) => x.clave === clave);
       if (!a && !c) continue;
       const va = a?.valor ?? 0, vc = c?.valor ?? 0;
-      diferencias.push({ clave, nombre: c?.nombre ?? a!.nombre, aplicado: va, correcto: vc, diferencia: va - vc, municipioAplicado: a?.municipio, municipioCorrecto: c?.municipio });
+      const nombre = clave === "ica" ? "ReteICA" : c?.nombre ?? a!.nombre;
+      diferencias.push({ clave, nombre, aplicado: va, correcto: vc, diferencia: va - vc, municipioAplicado: a?.municipio, municipioCorrecto: c?.municipio });
     }
   }
   const pagado = aplicado?.pagado ?? 0;

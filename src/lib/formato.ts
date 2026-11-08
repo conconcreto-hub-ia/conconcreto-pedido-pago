@@ -24,9 +24,19 @@ export function copCorto(valor: bigint | number | null | undefined): string {
 
 const DIA = 86_400_000;
 
+/** Una fecha «AAAA-MM-DD» sin hora es un día de Colombia, no la medianoche UTC (que en Bogotá es el día
+ *  anterior). Lo encontró la prueba de punta a punta: un pago del 30 salía «el 29». */
+export function aFecha(d: Date | string): Date {
+  return typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(`${d}T12:00:00-05:00`) : new Date(d);
+}
+
+export function fechaLarga(d: Date | string): string {
+  return aFecha(d).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Bogota" });
+}
+
 export function fecha(d: Date | string | null | undefined): string {
   if (!d) return "Sin fecha";
-  return new Date(d).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "America/Bogota" });
+  return aFecha(d).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "America/Bogota" });
 }
 
 export function fechaHora(d: Date | string | null | undefined): string {
@@ -72,3 +82,10 @@ export function pesos(valor: number | null | undefined): string {
 /** "8 ‰", "2,5 %" */
 export const porMil = (v: number) => `${v.toLocaleString("es-CO", { maximumFractionDigits: 2 })} ‰`;
 export const porciento = (v: number) => `${(v * 100).toLocaleString("es-CO", { maximumFractionDigits: 2 })} %`;
+
+/** «SUMINISTROS Y MONTAJES LA LADERA S.A.S.» → «Suministros y Montajes La Ladera» */
+export function nombrePropio(razon: string): string {
+  const menores = new Set(["y", "de", "del", "e"]);
+  return razon.replace(/\s*S\.?A\.?S?\.?\s*$/i, "").toLowerCase().split(/\s+/).filter(Boolean)
+    .map((w, i) => (i > 0 && menores.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(" ");
+}

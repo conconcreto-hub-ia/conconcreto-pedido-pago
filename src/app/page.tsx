@@ -1,65 +1,91 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Barra } from "@/components/barra";
+import { exigirSesion } from "@/lib/auth/sesion";
+import { Cifra, Contenedor, Encabezado, Insignia, Tarjeta, Vacio, Boton } from "@/components/ui";
+import { IconoBuscar, IconoFlecha } from "@/components/iconos";
+import { db } from "@/lib/db";
+import { buscar } from "@/lib/consultas";
+import { ESTADO_FACTURA } from "@/lib/etiquetas";
+import { copCorto, fecha, pesos, nombrePropio } from "@/lib/formato";
 
-export default function Home() {
+
+export const dynamic = "force-dynamic";
+
+type FilaFactura = Awaited<ReturnType<typeof buscar>>[number];
+
+function Fila({ f }: { f: FilaFactura }) {
+  const e = ESTADO_FACTURA[f.estado];
+  const pagado = f.pagos[0]?.valorPagado;
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <Link href={`/facturas/${f.id}`} className="block">
+      <Tarjeta viva className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_150px_150px_110px] sm:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-tinta-3">
+            <span className="font-mono text-[13px] font-semibold text-tinta">{f.numero}</span>
+            <span>·</span><span>pedido {f.pedidoNumero ?? "—"}</span>
+            <span>·</span><span>NIT {f.nitEmisor}</span>
+          </div>
+          <div className="mt-1 truncate font-semibold">{f.proveedor ? nombrePropio(f.proveedor.razonSocial) : f.razonEmisor}</div>
+          <div className="truncate text-[13px] text-tinta-2">{f.pedido ? `${f.pedido.obra.nombre} · ${f.pedido.obra.municipio}` : "Sin pedido en S/4HANA"}</div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <div><div className="num text-[16px] font-extrabold">{pesos(f.total)}</div><div className="text-[12px] text-tinta-3">factura · {fecha(f.fecha)}</div></div>
+        <div><div className="num text-[16px] font-extrabold">{pagado ? pesos(pagado) : "—"}</div><div className="text-[12px] text-tinta-3">pagado</div></div>
+        <div className="flex items-center justify-between gap-2 sm:justify-end"><Insignia tono={e.tono} punto>{e.etiqueta}</Insignia><IconoFlecha className="size-4 text-tinta-3" /></div>
+      </Tarjeta>
+    </Link>
+  );
+}
+
+export default async function Rastrear({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  await exigirSesion();
+  const { q } = await searchParams;
+  const [resultados, recientes, porAprobar, pendientes, detenidas, pagos] = await Promise.all([
+    q ? buscar(q) : Promise.resolve([] as FilaFactura[]),
+    q ? Promise.resolve([] as FilaFactura[]) : db.factura.findMany({ include: { proveedor: true, pedido: { include: { obra: true } }, pagos: true }, orderBy: { fecha: "desc" }, take: 12 }),
+    db.reclamo.count({ where: { estado: "por_aprobar" } }),
+    db.pendiente.count({ where: { estado: "abierto" } }),
+    db.factura.count({ where: { estado: { in: ["detenida", "revisar"] } } }),
+    db.pago.aggregate({ _sum: { valorPagado: true }, where: { fecha: { gte: new Date(Date.now() - 31 * 86_400_000) } } }),
+  ]);
+
+  return (
+    <>
+      <Barra>
+        <Contenedor className="pb-10 pt-8">
+          <div className="flex flex-wrap items-center gap-2.5 text-[13px] font-semibold uppercase tracking-[.08em] text-white/75"><span className="punto-vivo" />Pedido · liberación · entrada · causación · pago</div>
+          <h1 className="mt-4 max-w-[880px] text-[34px] font-extrabold leading-[1.08] text-white sm:text-[44px]">¿Por qué le pagamos <span className="dorado">90 si eran 100?</span></h1>
+          <form action="/" className="mt-7 flex max-w-[720px] flex-col gap-2 sm:flex-row">
+            <label className="sr-only" htmlFor="q">NIT, factura o pedido</label>
+            <div className="relative flex-1">
+              <IconoBuscar className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-tinta-3" />
+              <input id="q" name="q" defaultValue={q ?? ""} placeholder="NIT del proveedor, número de factura o de pedido" className="h-12 w-full rounded-ctl border border-white/15 bg-white pl-10 pr-3 text-[15px] text-tinta outline-none focus:border-oro" />
+            </div>
+            <Boton type="submit" variante="primario" className="h-12">Rastrear</Boton>
+          </form>
+          <div className="mt-8 flex flex-wrap gap-x-12 gap-y-6">
+            <Cifra oscuro valor={porAprobar} rotulo="Respuestas por aprobar" />
+            <Cifra oscuro valor={pendientes} rotulo="Pendientes abiertos" nota="almacén, obra, dirección, CxP" />
+            <Cifra oscuro valor={detenidas} rotulo="Facturas detenidas o por revisar" />
+            <Cifra oscuro valor={copCorto(pagos._sum.valorPagado ?? 0)} rotulo="Pagado en los últimos 31 días" />
+          </div>
+        </Contenedor>
+      </Barra>
+
+      <Contenedor className="space-y-5 py-10">
+        {q ? (
+          <>
+            <Encabezado et="Resultado" titulo={resultados.length ? `${resultados.length} ${resultados.length === 1 ? "factura" : "facturas"} para «${q}»` : `Nada para «${q}»`} bajada="Abre una para ver la cadena completa, el recálculo de las retenciones y dónde se fue la diferencia." />
+            {resultados.length ? <div className="space-y-2.5">{resultados.map((f) => <Fila key={f.id} f={f} />)}</div> : (
+              <Vacio icono={<IconoBuscar className="size-5" />} titulo="No encontré esa factura">Prueba con el NIT sin dígito de verificación (901377219), el número como lo escribe el proveedor (LAD-1021) o el pedido (4500128942).</Vacio>
+            )}
+          </>
+        ) : (
+          <>
+            <Encabezado et="Las últimas facturas" titulo="Busca por NIT, factura o pedido" bajada="O abre una de las recientes. El rastreo sale del extracto de S/4HANA: el agente no carga nada en SAP ni ejecuta pagos." />
+            <div className="space-y-2.5">{recientes.map((f) => <Fila key={f.id} f={f} />)}</div>
+          </>
+        )}
+      </Contenedor>
+    </>
   );
 }

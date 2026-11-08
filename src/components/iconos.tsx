@@ -72,3 +72,18 @@ export const IconoTendencia = ({ className }: P) => (
 export const IconoDocumento = ({ className }: P) => (
   <svg {...base(className)}><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5Z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>
 );
+export const IconoBuscar = ({ className }: P) => (
+  <svg {...base(className)}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+);
+export const IconoBanco = ({ className }: P) => (
+  <svg {...base(className)}><path d="M3 10 12 4l9 6" /><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8" /><path d="M3 20h18" /></svg>
+);
+export const IconoFirma = ({ className }: P) => (
+  <svg {...base(className)}><path d="M4 20h16" /><path d="M15.5 4.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 10.5-10.5Z" /></svg>
+);
+export const IconoCalculo = ({ className }: P) => (
+  <svg {...base(className)}><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2" /></svg>
+);
+export const IconoLista = ({ className }: P) => (
+  <svg {...base(className)}><path d="M9 6h11M9 12h11M9 18h11" /><path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2" /></svg>
+);

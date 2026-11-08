@@ -2,9 +2,10 @@
 
 import { exigirSesion } from "@/lib/auth/sesion";
 import { Barra } from "@/components/barra";
-import { Aja, Boton, Chip, Cifra, Contenedor, Dato, Encabezado, Encaje, Insignia, Marca, SeccionEt, Tarjeta, Vacio } from "@/components/ui";
-import { IconoRadar, IconoCorreo, IconoComite, IconoPaquete, IconoProveedor, IconoCuadro, IconoAgente, IconoEscudo, IconoTendencia, IconoFlecha } from "@/components/iconos";
-import { ESTADO_OPORTUNIDAD, RECOMENDACION, ESTADO_INVITACION } from "@/lib/etiquetas";
+import { Aja, Boton, Chip, Cifra, Contenedor, Dato, Encabezado, Insignia, Marca, SeccionEt, Tarjeta, Vacio } from "@/components/ui";
+import { IconoCorreo, IconoPaquete, IconoProveedor, IconoAgente, IconoEscudo, IconoFlecha, IconoBuscar, IconoBanco, IconoFirma, IconoCalculo, IconoLista, IconoDocumento } from "@/components/iconos";
+import { Cadena } from "@/components/cadena";
+import { ESTADO_FACTURA, ESTADO_RECLAMO, TIPO_CASO, ESTADO_TARIFA } from "@/lib/etiquetas";
 
 const COLORES = [
   ["noche", "#07130c"], ["noche-2", "#0d2216"], ["verde-profundo", "#07582b"], ["verde", "#3dae2b"], ["verde-suave", "#eaf6e7"],
@@ -47,15 +48,15 @@ export default async function Sistema() {
             <h1 className="text-[44px] font-extrabold leading-none">De la invitación al <span className="dorado">cuadro comparativo</span></h1>
             <h2 className="text-[26px] font-extrabold">Título de sección · Montserrat 800</h2>
             <h3 className="text-[18px] font-bold">Título de tarjeta · Montserrat 700</h3>
-            <p className="max-w-[640px] text-tinta-2">Texto corrido en Work Sans. El agente lee la invitación, arma los paquetes y le escribe a los proveedores; una persona aprueba antes de que algo salga.</p>
-            <p className="font-mono text-[13px] text-tinta-2">CO1.NTC.8123456 · JetBrains Mono para códigos</p>
+            <p className="max-w-[640px] text-tinta-2">Texto corrido en Work Sans. El agente lee el reclamo, rastrea la cadena, recalcula y redacta; una persona aprueba antes de que algo salga.</p>
+            <p className="font-mono text-[13px] text-tinta-2">LAD-1021 · 4500128942 · JetBrains Mono para códigos</p>
           </Tarjeta>
         </section>
 
         <section className="space-y-4">
           <SeccionEt>Botones</SeccionEt>
           <div className="flex flex-wrap gap-3">
-            <Boton variante="primario">Aprobar en comité <IconoFlecha /></Boton>
+            <Boton variante="primario">Aprobar y enviar <IconoFlecha /></Boton>
             <Boton>Secundario</Boton>
             <Boton variante="oscuro">Oscuro</Boton>
             <Boton variante="fantasma">Fantasma</Boton>
@@ -68,52 +69,59 @@ export default async function Sistema() {
         <section className="space-y-4">
           <SeccionEt>Estados</SeccionEt>
           <div className="flex flex-wrap gap-2">
-            {Object.values(ESTADO_OPORTUNIDAD).map((e) => <Insignia key={e.etiqueta} tono={e.tono}>{e.etiqueta}</Insignia>)}
+            {Object.values(ESTADO_FACTURA).map((e) => <Insignia key={e.etiqueta} tono={e.tono} punto>{e.etiqueta}</Insignia>)}
           </div>
           <div className="flex flex-wrap gap-2">
-            {Object.values(RECOMENDACION).map((e) => <Insignia key={e.etiqueta} tono={e.tono} punto>{e.etiqueta}</Insignia>)}
+            {Object.values(TIPO_CASO).map((e) => <Insignia key={e.etiqueta} tono={e.tono} punto>{e.etiqueta}</Insignia>)}
           </div>
           <div className="flex flex-wrap gap-2">
-            {Object.values(ESTADO_INVITACION).map((e) => <Insignia key={e.etiqueta} tono={e.tono}>{e.etiqueta}</Insignia>)}
+            {[...Object.values(ESTADO_RECLAMO), ...Object.values(ESTADO_TARIFA)].map((e) => <Insignia key={e.etiqueta} tono={e.tono}>{e.etiqueta}</Insignia>)}
           </div>
-          <div className="flex flex-wrap gap-2"><Chip>Antioquia</Chip><Chip>Licitación pública</Chip><Chip>Vías</Chip></div>
+          <div className="flex flex-wrap gap-2"><Chip>Rionegro</Chip><Chip>Servicios · 8 ‰</Chip><Chip>Base 10 UVT</Chip></div>
         </section>
 
         <section className="space-y-4">
           <SeccionEt>Cifras y encaje</SeccionEt>
           <Tarjeta className="flex flex-wrap gap-10 p-6">
-            <Cifra valor="14" rotulo="Oportunidades abiertas" nota="3 nuevas hoy" />
-            <Cifra valor="$48.200 M" rotulo="Valor en estudio" />
-            <Cifra valor="6" rotulo="En comité" />
-            <div className="space-y-2 pt-1"><Encaje valor={86} /><Encaje valor={54} /><Encaje valor={null} /></div>
+            <Cifra valor="3" rotulo="Respuestas por aprobar" nota="1 nueva hoy" />
+            <Cifra valor="$74.400" rotulo="Retenidos de más" />
+            <Cifra valor="2" rotulo="Pendientes abiertos" />
           </Tarjeta>
           <div className="banda flex flex-wrap gap-10 rounded-sup p-6">
-            <Cifra oscuro valor="55" rotulo="Procesos revisados hoy" />
-            <Cifra oscuro valor="16" rotulo="Con encaje" />
+            <Cifra oscuro valor="11" rotulo="Facturas cruzadas" />
+            <Cifra oscuro valor="4" rotulo="Detenidas antes de pagar" />
           </div>
         </section>
 
         <section className="space-y-4">
           <SeccionEt>Bloques</SeccionEt>
           <div className="grid gap-4 md:grid-cols-2">
-            <Aja>En los últimos 3 años esta entidad adjudicó 8 contratos de alcantarillado. Ganaron siempre 3 oferentes, con un descuento promedio del 7,4 % sobre el presupuesto oficial.</Aja>
+            <Aja>La factura dice Rionegro, el domicilio del proveedor. El pedido está imputado a la Torre Ciudad del Río, en Medellín: el ICA va allá, al 2 por mil.</Aja>
             <Tarjeta className="p-5">
               <dl className="m-0">
-                <Dato k="Entidad">Empresas Públicas de Medellín</Dato>
-                <Dato k="Modalidad">Licitación pública</Dato>
-                <Dato k="Presupuesto">$12.435 millones</Dato>
+                <Dato k="Proveedor">Suministros y Montajes La Ladera</Dato>
+                <Dato k="Pedido">4500128942</Dato>
+                <Dato k="Pagado">$13.807.400</Dato>
               </dl>
             </Tarjeta>
           </div>
-          <Vacio icono={<IconoRadar className="size-5" />} titulo="El radar todavía no ha corrido" accion={<Boton variante="primario">Correr el radar</Boton>}>
-            Cuando corra, aquí aparecen los procesos del SECOP que encajan con los criterios de Conconcreto.
+          <Vacio icono={<IconoCorreo className="size-5" />} titulo="La bandeja está al día" accion={<Boton variante="primario">Revisar el buzón ahora</Boton>}>
+            Cuando un proveedor escriba, su caso aparece aquí con la cadena, la explicación y la respuesta lista.
           </Vacio>
+          <Tarjeta className="p-5"><Cadena pasos={[
+            { clave: "pedido", titulo: "Pedido", estado: "ok", documento: "4500129015", detalle: "Material · Hotel Distrito Envigado" },
+            { clave: "liberacion", titulo: "Liberación", estado: "ok", detalle: "Liberado por el director" },
+            { clave: "entrada", titulo: "Entrada de mercancías", estado: "error", detalle: "El almacén no ha registrado el recibo" },
+            { clave: "factura", titulo: "Factura", estado: "ok", documento: "LAD-2210", detalle: "$19.613.580 con IVA" },
+            { clave: "causacion", titulo: "Causación", estado: "error", detalle: "Detenida" },
+            { clave: "pago", titulo: "Pago", estado: "espera", detalle: "Sin pagar" },
+          ]} /></Tarjeta>
         </section>
 
         <section className="space-y-4">
           <SeccionEt>Íconos</SeccionEt>
           <div className="flex flex-wrap gap-4 text-tinta-2">
-            {[IconoRadar, IconoCorreo, IconoComite, IconoPaquete, IconoProveedor, IconoCuadro, IconoAgente, IconoEscudo, IconoTendencia].map((I, i) => (
+            {[IconoBuscar, IconoCorreo, IconoDocumento, IconoFirma, IconoPaquete, IconoCalculo, IconoBanco, IconoProveedor, IconoAgente, IconoEscudo, IconoLista].map((I, i) => (
               <div key={i} className="grid size-11 place-items-center rounded-ctl border border-linea bg-papel"><I className="size-5" /></div>
             ))}
           </div>
