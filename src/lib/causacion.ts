@@ -72,6 +72,8 @@ export async function causarLote(archivos: { nombre: string; xml: string }[], qu
       errores.push(`${a.nombre}: ${e instanceof Error ? e.message : e}`);
     }
   }
+  // Si no quedó nada nuevo que cruzar, no se crea un lote vacío.
+  if (!leidas.length) return { loteId: "", leidas: 0, repetidas, errores, listas: 0, detenidas: 0, revisar: 0, neto: 0 };
   const tarifas = await tarifasIca();
   const lote = await db.lote.create({ data: { nombre: nombreLote || `Lote del ${new Date().toLocaleDateString("es-CO", { day: "numeric", month: "long", timeZone: "America/Bogota" })}`, creadoPor: quien } });
 

@@ -26,7 +26,7 @@ export default async function Pendientes() {
         {!abiertos.length && <Vacio icono={<IconoLista className="size-5" />} titulo="Nadie tiene pendientes">Aparecen aquí cuando un reclamo destapa un error en la cadena.</Vacio>}
         {[...porResponsable.entries()].map(([quien, lista]) => (
           <section key={quien} className="space-y-3">
-            <div className="flex flex-wrap items-baseline gap-2"><h3 className="text-[18px] font-bold">{quien}</h3><span className="text-[13px] text-tinta-3">{AREA[lista[0].area].etiqueta} · {lista[0].correo}</span></div>
+            <div className="flex flex-wrap items-baseline gap-2"><h3 className="text-[18px] font-bold">{quien}</h3><span className="text-[13px] text-tinta-3">{quien !== AREA[lista[0].area].etiqueta ? `${AREA[lista[0].area].etiqueta} · ` : ""}{lista[0].correo}</span></div>
             {lista.map((p) => (
               <Tarjeta key={p.id} className="p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">

@@ -89,7 +89,7 @@ export default async function Reclamo({ params }: { params: Promise<{ id: string
                 {r.pendientes.map((p) => (
                   <div key={p.id} className="mt-3 text-[13.5px]">
                     <div className="font-semibold">{p.titulo}</div>
-                    <div className="text-tinta-2">{p.responsable} · {AREA[p.area].etiqueta} · {p.correo}</div>
+                    <div className="text-tinta-2">{p.responsable}{p.responsable !== AREA[p.area].etiqueta ? ` · ${AREA[p.area].etiqueta}` : ""} · {p.correo}</div>
                     <p className="mt-1.5 text-tinta-2">{p.detalle}</p>
                     <p className="mt-1.5 text-[12.5px] text-tinta-3">{p.avisoId ? `Aviso enviado ${p.avisadoEn ? fechaHora(p.avisadoEn) : ""}` : "El aviso sale cuando se aprueba la respuesta"}</p>
                   </div>

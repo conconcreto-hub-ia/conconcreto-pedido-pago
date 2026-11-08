@@ -45,7 +45,7 @@ export const agentmail = {
   leer: (messageId: string) => llamar<MensajeAM>(`/inboxes/${enc(buzon())}/messages/${enc(messageId)}`),
   adjunto: (messageId: string, attachmentId: string) =>
     llamar<{ download_url?: string; url?: string } & Record<string, unknown>>(`/inboxes/${enc(buzon())}/messages/${enc(messageId)}/attachments/${enc(attachmentId)}`),
-  /** Responde en el mismo hilo. OJO: responder a un correo PROPIO (un recordatorio sobre nuestra invitación)
+  /** Responde en el mismo hilo. OJO: responder a un correo PROPIO (un aviso que mandó el agente)
    *  sin `to` se lo manda al mismo buzón. Ahí hay que decir a quién va. */
   responder: (messageId: string, cuerpo: { text: string; html?: string; to?: string[] }) =>
     llamar<{ message_id: string; thread_id: string }>(`/inboxes/${enc(buzon())}/messages/${enc(messageId)}/reply`, { method: "POST", body: JSON.stringify(cuerpo) }),

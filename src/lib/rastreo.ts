@@ -7,7 +7,7 @@
 
 import type { TipoCaso, Area } from "@prisma/client";
 import { calcularRetenciones, clasificacionPorDefecto, tarifaDe, type CalidadTributaria, type ConceptoRenta, type Retencion, type TarifaIcaDato, type ResultadoRetenciones } from "./retenciones";
-import { fechaLarga } from "./formato";
+import { fechaLarga, nombrePropio } from "./formato";
 import { cruzar, bloqueantes, entradaValida, valorPedido, type Alerta, type FacturaCruce, type PedidoCruce } from "./cruce";
 
 export type CausacionRastreo = {
@@ -180,13 +180,13 @@ function diagnosticar(x: {
     return { ...base, tipo: "pedido_sin_liberar", esError: true, titulo: `El pedido ${pedido.numero} no está liberado`,
       explicacion: `El pedido ${pedido.numero} de ${pedido.obra.nombre} está pendiente de liberación. Sin liberación no se puede registrar la entrada ni causar la factura ${f.numero}. Le toca a ${pedido.obra.director}, director de la obra.`,
       responsable: { area: "direccion", nombre: pedido.obra.director, correo: pedido.obra.correoDirector },
-      pendiente: { titulo: `Liberar el pedido ${pedido.numero}`, detalle: `El proveedor ${e.proveedor?.razonSocial ?? f.numero} reclama la factura ${f.numero} (${p$(f.total)}). El pedido ${pedido.numero} de ${pedido.obra.nombre} está pendiente de liberación: si la compra está aprobada, libéralo en S/4HANA para que el almacén registre la entrada y Cuentas por pagar pueda causar.` } };
+      pendiente: { titulo: `Liberar el pedido ${pedido.numero}`, detalle: `El proveedor ${e.proveedor ? nombrePropio(e.proveedor.razonSocial) : f.numero} reclama la factura ${f.numero} (${p$(f.total)}). El pedido ${pedido.numero} de ${pedido.obra.nombre} está pendiente de liberación: si la compra está aprobada, libéralo en S/4HANA para que el almacén registre la entrada y Cuentas por pagar pueda causar.` } };
   }
   if (pedido && tiene("sin_entrada")) {
     return { ...base, tipo: "entrada_sin_registrar", esError: true, titulo: `Falta la entrada de mercancías del pedido ${pedido.numero}`,
       explicacion: `El pedido ${pedido.numero} está liberado pero el almacén de ${pedido.obra.nombre} no ha registrado la entrada de mercancías. Sin entrada no hay contra qué pagar: la factura ${f.numero} está detenida. Le toca a ${pedido.obra.almacenista}.`,
       responsable: { area: "almacen", nombre: pedido.obra.almacenista, correo: pedido.obra.correoAlmacen },
-      pendiente: { titulo: `Registrar la entrada del pedido ${pedido.numero}`, detalle: `El proveedor ${e.proveedor?.razonSocial ?? ""} reclama la factura ${f.numero} (${p$(f.total)}, vence ${f.vence ? fechaLarga(f.vence) : "sin fecha"}). El pedido ${pedido.numero} no tiene entrada de mercancías en S/4HANA. Si el material llegó a ${pedido.obra.nombre}, regístrala (MIGO) por lo recibido; si no llegó o llegó incompleto, avísale a Cuentas por pagar para responderle al proveedor.` } };
+      pendiente: { titulo: `Registrar la entrada del pedido ${pedido.numero}`, detalle: `El proveedor ${e.proveedor ? nombrePropio(e.proveedor.razonSocial) : ""} reclama la factura ${f.numero} (${p$(f.total)}, vence ${f.vence ? fechaLarga(f.vence) : "sin fecha"}). El pedido ${pedido.numero} no tiene entrada de mercancías en S/4HANA. Si el material llegó a ${pedido.obra.nombre}, regístrala (MIGO) por lo recibido; si no llegó o llegó incompleto, avísale a Cuentas por pagar para responderle al proveedor.` } };
   }
   if (pedido && tiene("sin_hes")) {
     return { ...base, tipo: "hes_sin_registrar", esError: true, titulo: `Falta la HES del pedido ${pedido.numero}`,

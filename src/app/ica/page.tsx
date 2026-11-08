@@ -33,11 +33,11 @@ export default async function Ica() {
             const conObras = obras.filter((o) => o.municipio === t.municipio);
             return (
               <Tarjeta key={t.id} className="p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0 space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-center gap-2"><h3 className="text-[18px] font-bold">{t.municipio}</h3><span className="text-[13px] text-tinta-3">{t.departamento}</span><Insignia tono={sinTarifa ? "rojo" : e.tono} punto>{sinTarifa ? "Sin tarifa cargada" : e.etiqueta}</Insignia></div>
                     <div className="flex flex-wrap gap-2">{sinTarifa ? <span className="text-[13.5px] text-tinta-2">Lo que caiga aquí sale «Revisar» hasta que alguien cargue la tarifa.</span> : Object.entries(tar).map(([k, v]) => <span key={k} className="inline-flex h-7 items-center gap-1.5 rounded-full border border-linea bg-fondo px-3 text-[13px]"><span className="text-tinta-3">{NOMBRE[k] ?? k}</span><span className="num font-bold">{porMil(v)}</span></span>)}</div>
-                    <p className="m-0 text-[13px] text-tinta-2">{t.norma}{t.baseUvt ? ` · base ${t.baseUvt} UVT (${pesos(t.baseUvt * UVT)})` : ""} · cuenta {t.cuenta}</p>
+                    <p className="m-0 text-[13px] text-tinta-2">{t.norma}{t.baseUvt ? ` · base 2026 en pesos: ${pesos(t.baseUvt * UVT)}` : ""} · cuenta {t.cuenta}</p>
                     {t.notas && <p className="m-0 text-[13px] text-[#8a5a00]">{t.notas}</p>}
                     <p className="m-0 text-[12px] text-tinta-3">
                       {t.fuente ? <a href={t.fuente} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-verde-profundo hover:underline">Fuente<IconoExterno className="size-3" /></a> : "Sin fuente"}

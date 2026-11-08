@@ -44,6 +44,7 @@ export async function causarLoteAhora(_: unknown, f: FormData): Promise<{ error?
   const { causarLote } = await import("@/lib/causacion");
   const r = await causarLote(await Promise.all(archivos.map(async (a) => ({ nombre: a.name, xml: await a.text() }))), yo.nombre, String(f.get("nombre") ?? "").trim() || undefined);
   revalidatePath("/causacion");
+  if (!r.loteId) return { error: [r.repetidas.length ? `Ya estaban causadas: ${r.repetidas.join(", ")}.` : "", ...r.errores].filter(Boolean).join(" ") || "No había facturas que cruzar." };
   return { loteId: r.loteId };
 }
 
@@ -55,7 +56,7 @@ export async function causarLoteDemo(): Promise<{ error?: string; loteId?: strin
   const { causarLote } = await import("@/lib/causacion");
   const r = await causarLote(archivos, yo.nombre, "Lote 2 · semana del 5 de octubre (demostración)");
   revalidatePath("/causacion");
-  if (!r.leidas && r.repetidas.length) return { error: `Ese lote ya se causó (${r.repetidas.join(", ")}).`, loteId: r.loteId };
+  if (!r.loteId) return { error: `Ese lote ya se causó (${r.repetidas.join(", ")}). Ábrelo en la lista.` };
   return { loteId: r.loteId };
 }
 

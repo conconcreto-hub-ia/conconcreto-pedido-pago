@@ -14,11 +14,16 @@ export function FormLote() {
   }, {} as { error?: string; loteId?: string });
   const [demo, empezar] = useTransition();
   const [errorDemo, setErrorDemo] = useState<string | null>(null);
+  const [elegidos, setElegidos] = useState<string[]>([]);
   return (
     <div className="space-y-4">
       <form action={accion} className="space-y-3">
-        <label className="block text-[13px] font-semibold">Facturas electrónicas (XML de la DIAN)
-          <input type="file" name="xml" accept=".xml,text/xml,application/xml" multiple required className="mt-1.5 block w-full rounded-ctl border border-dashed border-linea bg-fondo p-3 text-[13.5px] file:mr-3 file:rounded-ctl file:border-0 file:bg-noche-2 file:px-3 file:py-1.5 file:font-display file:text-[13px] file:font-semibold file:text-white" />
+        <div className="text-[13px] font-semibold">Facturas electrónicas (XML de la DIAN)</div>
+        {/* El texto del selector nativo sale en el idioma del navegador: se esconde y se pone uno propio. */}
+        <label className="flex cursor-pointer items-center gap-3 rounded-ctl border border-dashed border-linea bg-fondo p-3 text-[13.5px] hover:border-verde">
+          <input type="file" name="xml" accept=".xml,text/xml,application/xml" multiple required className="sr-only" onChange={(e) => setElegidos([...(e.target.files ?? [])].map((x) => x.name))} />
+          <span className="inline-flex h-8 items-center rounded-ctl bg-noche-2 px-3 font-display text-[13px] font-semibold text-white">Elegir XML</span>
+          <span className="min-w-0 truncate text-tinta-2">{elegidos.length ? `${elegidos.length} ${elegidos.length === 1 ? "factura" : "facturas"}: ${elegidos.join(", ")}` : "Ninguno elegido"}</span>
         </label>
         <label className="block text-[13px] font-semibold">Nombre del lote (opcional)
           <input name="nombre" placeholder="Semana del 9 de noviembre" className="mt-1 h-10 w-full rounded-ctl border border-linea bg-fondo px-3 text-[14px] outline-none focus:border-verde" />

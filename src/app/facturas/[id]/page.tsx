@@ -59,7 +59,7 @@ export default async function Factura({ params }: { params: Promise<{ id: string
             </Aja>
             <DeFacturaAPago rastreo={rastreo} />
             <div className="space-y-3">
-              <SeccionEt>Dónde se fue la diferencia</SeccionEt>
+              <SeccionEt>{rastreo.aplicado ? "Dónde se fue la diferencia" : "Las retenciones, cuando se cause"}</SeccionEt>
               <TablaRetenciones rastreo={rastreo} />
             </div>
             {rastreo.alertas.length > 0 && (

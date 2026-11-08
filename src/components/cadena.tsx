@@ -80,7 +80,7 @@ export function TablaRetenciones({ rastreo }: { rastreo: Rastreo }) {
             return (
               <tr key={k} className="border-t border-linea-2 align-top">
                 <td className="px-4 py-3">
-                  <div className="font-semibold">{c?.nombre ?? a?.nombre}</div>
+                  <div className="font-semibold">{k === "ica" ? "ReteICA" : c?.nombre ?? a?.nombre}</div>
                   <div className="text-[12px] text-tinta-3">{c?.nota ?? a?.nota}</div>
                   {c?.porValidar && <div className="mt-1 inline-flex items-center gap-1 text-[12px] font-semibold text-[#8a5a00]"><IconoAlerta className="size-3.5" />Tarifa por validar con Contabilidad</div>}
                 </td>

@@ -204,8 +204,14 @@ export async function procesarCorreo(m: MensajeAM): Promise<Reclamo | null> {
     await db.evento.create({ data: { actor: "agente", tipo: "reclamo.rastreado", reclamoId: rec.id, facturaId: factura!.id, descripcion: `Rastreó pedido, liberación, entrada, causación y pago: ${rastreo.diagnostico.titulo}${rastreo.porReintegrar ? ` · ${pesos(rastreo.porReintegrar)} por reintegrar` : ""}` } });
     const d = rastreo.diagnostico;
     if (d.esError && d.responsable && d.pendiente) {
-      const p = await db.pendiente.create({ data: { reclamoId: rec.id, facturaId: factura!.id, area: d.responsable.area, responsable: d.responsable.nombre, correo: d.responsable.correo, titulo: d.pendiente.titulo, detalle: d.pendiente.detalle } });
-      await db.evento.create({ data: { actor: "agente", tipo: "pendiente.creado", reclamoId: rec.id, facturaId: factura!.id, descripcion: `Le dejó un pendiente a ${p.responsable}: ${p.titulo}`, datos: { pendienteId: p.id } } });
+      // Si ya hay un pendiente abierto por lo mismo (el proveedor volvió a escribir), no se duplica.
+      const abierto = await db.pendiente.findFirst({ where: { facturaId: factura!.id, titulo: d.pendiente.titulo, estado: "abierto" } });
+      if (abierto) {
+        await db.evento.create({ data: { actor: "agente", tipo: "pendiente.existente", reclamoId: rec.id, facturaId: factura!.id, descripcion: `Ya había un pendiente abierto para ${abierto.responsable}: ${abierto.titulo}. No lo duplicó.`, datos: { pendienteId: abierto.id } } });
+      } else {
+        const p = await db.pendiente.create({ data: { reclamoId: rec.id, facturaId: factura!.id, area: d.responsable.area, responsable: d.responsable.nombre, correo: d.responsable.correo, titulo: d.pendiente.titulo, detalle: d.pendiente.detalle } });
+        await db.evento.create({ data: { actor: "agente", tipo: "pendiente.creado", reclamoId: rec.id, facturaId: factura!.id, descripcion: `Le dejó un pendiente a ${p.responsable}: ${p.titulo}`, datos: { pendienteId: p.id } } });
+      }
     }
   }
   if (lectura.instrucciones_al_sistema.length) await db.evento.create({ data: { actor: "agente", tipo: "reclamo.instruccion_ignorada", reclamoId: rec.id, descripcion: "El correo traía instrucciones para el sistema. Se trataron como texto del proveedor y no se ejecutaron.", datos: { instrucciones: lectura.instrucciones_al_sistema } } });

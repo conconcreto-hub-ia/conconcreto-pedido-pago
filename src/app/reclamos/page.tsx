@@ -30,7 +30,7 @@ export default async function Reclamos() {
           </div>
           <div className="flex flex-col items-start gap-1.5">
             <Insignia tono={t.tono} punto>{t.etiqueta}</Insignia>
-            {(r.avisos.length > 0 || r.pendientes.length > 0) && <span className="inline-flex items-center gap-1 text-[12px] text-tinta-3">{r.avisos.length > 0 && <><IconoAlerta className="size-3.5 text-[#8a5a00]" />{r.avisos.length} {r.avisos.length === 1 ? "aviso" : "avisos"}</>}{r.pendientes.length > 0 && <span className="ml-1">· {r.pendientes.length} pendiente</span>}</span>}
+            {(r.avisos.length > 0 || r.pendientes.length > 0) && <span className="inline-flex items-center gap-1 text-[12px] text-tinta-3">{r.avisos.length > 0 && <><IconoAlerta className="size-3.5 text-[#8a5a00]" />{r.avisos.length} {r.avisos.length === 1 ? "aviso" : "avisos"}</>}{r.pendientes.length > 0 && <span className={r.avisos.length ? "ml-1" : ""}>{r.avisos.length ? "· " : ""}{r.pendientes.length} pendiente</span>}</span>}
           </div>
           <div className="flex items-center justify-between gap-2 md:justify-end"><Insignia tono={e.tono}>{e.etiqueta}</Insignia><IconoFlecha className="size-4 text-tinta-3" /></div>
         </Tarjeta>

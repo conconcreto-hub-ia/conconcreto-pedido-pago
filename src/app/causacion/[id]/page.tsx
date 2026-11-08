@@ -59,7 +59,7 @@ export default async function Lote({ params }: { params: Promise<{ id: string }>
                 <div className="rounded-ctl border border-linea bg-fondo p-3.5 text-[13px]">
                   <div className="flex justify-between"><span className="text-tinta-3">Subtotal</span><span className="num">{pesos(f.subtotal)}</span></div>
                   <div className="flex justify-between"><span className="text-tinta-3">IVA</span><span className="num">{pesos(f.iva)}</span></div>
-                  {ret.map((x) => <div key={x.clave} className="flex justify-between gap-2"><span className="text-tinta-3">{x.nombre}{x.porMil ? ` · ${porMil(x.porMil)}` : x.tarifa ? ` · ${porciento(x.tarifa)}` : ""}</span><span className="num">{x.valor ? `−${pesos(x.valor)}` : "—"}</span></div>)}
+                  {ret.map((x) => <div key={x.clave} className="flex justify-between gap-2"><span className="min-w-0 text-tinta-3">{x.nombre}{x.porMil ? ` · ${porMil(x.porMil)}` : x.tarifa ? ` · ${porciento(x.tarifa)}` : ""}</span><span className="num shrink-0 whitespace-nowrap">{x.valor ? `−${pesos(x.valor)}` : "—"}</span></div>)}
                   <div className="mt-1.5 flex justify-between border-t border-linea pt-1.5 font-semibold"><span>{c.estado === "lista" ? "Neto a pagar" : "Total factura"}</span><span className="num">{pesos(c.estado === "lista" ? c.neto : f.total)}</span></div>
                 </div>
               </div>

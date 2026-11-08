@@ -140,7 +140,9 @@ async function main() {
     check(rB.tipo === "ica_municipio_errado" && rB.esError, "Diagnóstico: ICA retenido en el municipio equivocado", rB.tipo);
     check(rB.respuesta.includes("$74.400"), "La respuesta dice cuánto se retuvo de más ($74.400)");
     check(/Medell[ií]n/.test(rB.respuesta) && /revisi[oó]n/i.test(rB.respuesta), "Dice que el servicio fue en Medellín y que está en revisión");
-    check(rB.pendientes.length === 1 && rB.pendientes[0].area === "cxp", "Dejó el pendiente a Cuentas por pagar", rB.pendientes[0]?.titulo);
+    // Si ya había uno abierto por la misma factura (otro reclamo anterior), no lo duplica: cuenta el que hay.
+    const pendB = await db.pendiente.findMany({ where: { facturaId: rB.facturaId!, estado: "abierto", area: "cxp" } });
+    check(pendB.length === 1, "Hay un (solo un) pendiente abierto para Cuentas por pagar", pendB[0]?.titulo);
 
     console.log("\n   C · sin pagar porque falta la entrada, con una instrucción maliciosa");
     check(rC.tipo === "entrada_sin_registrar" && rC.esError, "Diagnóstico: falta la entrada de mercancías", rC.tipo);
@@ -160,8 +162,8 @@ async function main() {
       const x = await enviarRespuesta(r.id, "Cuentas por pagar (prueba e2e)");
       check(x.estado === "enviado", `Salió la respuesta de ${r.factura?.numero}`);
     }
-    const pendCxp = await db.pendiente.findFirstOrThrow({ where: { reclamoId: rB.id } });
-    check(!pendCxp.avisoId, "El aviso a Cuentas por pagar (dominio real) quedó retenido por el modo prueba");
+    const pendCxp = await db.pendiente.findFirst({ where: { facturaId: rB.facturaId!, estado: "abierto", area: "cxp" } });
+    check(!!pendCxp && !pendCxp.avisoId, "El aviso a Cuentas por pagar (dominio real) quedó retenido por el modo prueba");
 
     console.log("\n   Esperando las respuestas en el buzón del proveedor…");
     const despues = (m: MensajeAM) => new Date(m.timestamp) >= t0 && m.from.toLowerCase().includes(AGENTE.toLowerCase());

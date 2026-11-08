@@ -45,7 +45,7 @@ export default async function Sistema() {
         <section className="space-y-4">
           <SeccionEt>Tipografía</SeccionEt>
           <Tarjeta className="space-y-3 p-6">
-            <h1 className="text-[44px] font-extrabold leading-none">De la invitación al <span className="dorado">cuadro comparativo</span></h1>
+            <h1 className="text-[44px] font-extrabold leading-none">Del pedido <span className="dorado">al pago</span></h1>
             <h2 className="text-[26px] font-extrabold">Título de sección · Montserrat 800</h2>
             <h3 className="text-[18px] font-bold">Título de tarjeta · Montserrat 700</h3>
             <p className="max-w-[640px] text-tinta-2">Texto corrido en Work Sans. El agente lee el reclamo, rastrea la cadena, recalcula y redacta; una persona aprueba antes de que algo salga.</p>

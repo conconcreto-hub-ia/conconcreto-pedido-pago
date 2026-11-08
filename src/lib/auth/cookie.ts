@@ -2,7 +2,9 @@
 // sin ir a la base, si alguien está conectado. Quién es de verdad lo dice la base (sesion.ts).
 import { SignJWT, jwtVerify } from "jose";
 
-export const COOKIE = "cc_sesion";
+// Nombre propio: en localhost las cookies no distinguen puerto, y licitaciones y las apps hermanas usan
+// «cc_sesion». Con el mismo nombre, ingresar en una cerraba la sesión de la otra (lo encontró el recorrido).
+export const COOKIE = "pp_sesion";
 export const DURACION_MS = 12 * 60 * 60 * 1000; // una jornada
 
 const llave = () => {
