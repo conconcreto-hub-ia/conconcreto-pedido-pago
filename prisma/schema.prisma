@@ -1,0 +1,440 @@
+// De pedido a pago · Conconcreto x irrelevant
+//
+// La cadena de una factura de proveedor:
+//   pedido → liberación → entrada de mercancías o HES (con su aceptación) → factura → causación → pago
+//
+// Los maestros y los documentos de SAP (proveedores, obras, pedidos, entradas, causaciones, pagos) son un
+// extracto de DEMOSTRACIÓN: el agente no escribe en SAP ni ejecuta pagos. Lo que sí escribe es lo suyo:
+// reclamos, respuestas propuestas, pendientes, lotes de causación preventiva y la bitácora.
+//
+// Dinero en pesos enteros (Float: exacto hasta 2^53, sin el engorro de BigInt en JSON). Lo redondea el código.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Actor {
+  agente
+  persona
+  sistema
+}
+
+/* ── Maestros (extracto de S/4HANA) ─────────────────────────────────── */
+
+model Proveedor {
+  id                  String   @id @default(cuid())
+  acreedor            String   @unique // número de acreedor en SAP
+  razonSocial         String
+  nit                 String   @unique // sin DV
+  dv                  String
+  ciudadDomicilio     String
+  departamento        String
+  responsabilidadIva  String
+  granContribuyente   Boolean  @default(false)
+  autorretenedorRenta Boolean  @default(false)
+  resolucionAutorretencion String?
+  autorretenedorIca   Boolean  @default(false)
+  ciiu                String
+  actividad           String
+  correo              String?  // el correo registrado: es el que identifica a quien reclama
+  banco               String?  // «Bancolombia · ahorros ****4521». Nunca la cuenta completa.
+  createdAt           DateTime @default(now())
+
+  pedidos   Pedido[]
+  facturas  Factura[]
+  reclamos  Reclamo[]
+}
+
+model Obra {
+  id              String  @id @default(cuid())
+  codigo          String  @unique // OB-2041
+  pep             String  @unique // elemento PEP del pedido: de aquí sale el municipio del ICA
+  nombre          String
+  municipio       String
+  departamento    String
+  director        String
+  correoDirector  String
+  residente       String
+  correoResidente String
+  almacenista     String
+  correoAlmacen   String
+
+  pedidos Pedido[]
+}
+
+enum TipoPedido {
+  material
+  servicio
+}
+
+enum Liberacion {
+  liberado
+  pendiente // espera la firma del director
+  rechazado
+}
+
+model Pedido {
+  id          String     @id @default(cuid())
+  numero      String     @unique // 4500128904
+  proveedorId String
+  proveedor   Proveedor  @relation(fields: [proveedorId], references: [id])
+  obraId      String
+  obra        Obra       @relation(fields: [obraId], references: [id])
+  tipo        TipoPedido
+  fecha       DateTime
+  liberacion  Liberacion @default(pendiente)
+  liberadoPor String?
+  liberadoEn  DateTime?
+
+  posiciones PosicionPedido[]
+  entradas   Entrada[]
+  facturas   Factura[]
+}
+
+model PosicionPedido {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  posicion Int
+  texto    String
+  cantidad Float
+  unidad   String
+  precio   Float
+
+  @@unique([pedidoId, posicion])
+}
+
+enum TipoEntrada {
+  mercancia // MIGO: la registra el almacén
+  hes       // hoja de entrada de servicios: la registra la obra y se acepta
+}
+
+enum EstadoEntrada {
+  contabilizada        // entrada de mercancías
+  aceptada             // HES aceptada (liberada)
+  pendiente_aceptacion // HES registrada, falta la segunda liberación
+  anulada
+}
+
+model Entrada {
+  id            String        @id @default(cuid())
+  documento     String        @unique
+  tipo          TipoEntrada
+  pedidoId      String
+  pedido        Pedido        @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  posicion      Int
+  cantidad      Float
+  fecha         DateTime
+  estado        EstadoEntrada
+  registradoPor String?
+}
+
+/* ── Facturas, causación y pagos ────────────────────────────────────── */
+
+enum EstadoFactura {
+  recibida
+  causada
+  detenida
+  revisar
+  pagada
+}
+
+model Factura {
+  id           String        @id @default(cuid())
+  numero       String        @unique // «BES-4471», como la nombra el proveedor
+  idDian       String        @unique // «BES4471», el cbc:ID del XML
+  cufe         String?
+  proveedorId  String?
+  proveedor    Proveedor?    @relation(fields: [proveedorId], references: [id])
+  nitEmisor    String
+  razonEmisor  String
+  ciudadEmisor String?
+  pedidoNumero String?       // lo que dice la factura, exista o no el pedido
+  pedidoId     String?
+  pedido       Pedido?       @relation(fields: [pedidoId], references: [id])
+  fecha        DateTime
+  vence        DateTime?
+  nota         String?       @db.Text // texto del proveedor: información, nunca instrucción
+  subtotal     Float
+  iva          Float
+  total        Float
+  lineas       Json
+  xml          String?       @db.Text
+  estado       EstadoFactura @default(recibida)
+  loteId       String?
+  lote         Lote?         @relation(fields: [loteId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+
+  causacion Causacion?
+  pagos     Pago[]
+  reclamos  Reclamo[]
+  pendientes Pendiente[]
+  eventos   Evento[]
+}
+
+enum OrigenCausacion {
+  sap    // la registró una persona en SAP (el extracto)
+  agente // la propuso la causación preventiva de esta app
+}
+
+enum EstadoCausacion {
+  lista
+  detenida
+  revisar
+}
+
+model Causacion {
+  id            String          @id @default(cuid())
+  facturaId     String          @unique
+  factura       Factura         @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  origen        OrigenCausacion
+  estado        EstadoCausacion
+  conceptoRenta String?
+  actividadIca  String?
+  municipioIca  String?
+  cuentaCosto   String?
+  retenciones   Json            // [{ nombre, concepto, base, tarifa, porMil?, valor, cuenta, nota, municipio? }]
+  totalRetenido Float           @default(0)
+  neto          Float           @default(0)
+  asiento       Json?
+  alertas       Json?           // los hechos del cruce
+  criterio      String?         @db.Text
+  motivo        String?         // por qué se detuvo o qué hay que revisar
+  correo        Json?           // { para, asunto, cuerpo } si se detuvo
+  causadoPor    String?
+  causadoEn     DateTime        @default(now())
+}
+
+model Pago {
+  id           String   @id @default(cuid())
+  facturaId    String
+  factura      Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  fecha        DateTime
+  valorPagado  Float
+  retenciones  Json     // las que se aplicaron de verdad: [{ nombre, base, tarifa, porMil?, valor, municipio? }]
+  banco        String
+  referencia   String   // documento de compensación
+  createdAt    DateTime @default(now())
+
+  @@index([facturaId])
+}
+
+/// La tabla de ICA por municipio. Es un DATO, editable en /ica, con su fuente. Una tarifa por validar se
+/// usa en los cálculos pero nunca se le presenta a un proveedor como cierta.
+enum EstadoTarifa {
+  verificada
+  por_validar
+}
+
+model TarifaIca {
+  id             String       @id @default(cuid())
+  municipio      String       @unique
+  departamento   String
+  tarifas        Json         // { "servicios": 8, "comercial": 8, "industrial": 4, "*": 2 } en por mil
+  baseUvt        Float
+  cuenta         String
+  norma          String       @db.Text
+  fuente         String?      // URL del acuerdo municipal
+  estado         EstadoTarifa @default(por_validar)
+  verificadaEn   DateTime?
+  notas          String?      @db.Text
+  actualizadoPor String?
+  updatedAt      DateTime     @updatedAt
+}
+
+/// Un lote de causación preventiva: facturas XML que se cruzan ANTES de pagar.
+model Lote {
+  id        String   @id @default(cuid())
+  nombre    String
+  creadoPor String
+  resumen   Json?
+  createdAt DateTime @default(now())
+
+  facturas Factura[]
+}
+
+/* ── El buzón de reclamos ───────────────────────────────────────────── */
+
+enum TipoCaso {
+  pago_correcto           // el pago estuvo bien: se explica la diferencia
+  pendiente_de_pago       // causada y en plazo: se dice cuándo
+  ica_municipio_errado    // se retuvo ICA en otro municipio · error real
+  retencion_mal_calculada // otra retención mal · error real
+  sin_pedido              // la factura cita un pedido que no existe
+  pedido_sin_liberar      // el director no ha liberado el pedido · error real
+  entrada_sin_registrar   // el almacén no registró la entrada de mercancías · error real
+  hes_sin_registrar       // la obra no registró la HES · error real
+  hes_sin_aceptar         // la HES espera la segunda liberación · error real
+  valor_no_cuadra         // facturan distinto de lo pedido o recibido: nota crédito
+  tarifa_por_validar      // la tarifa del municipio no está confirmada
+  factura_no_encontrada
+  no_identificado         // no se sabe quién escribe
+}
+
+enum Identificacion {
+  correo_registrado
+  nit_en_texto
+  no_identificado
+}
+
+enum EstadoReclamo {
+  por_aprobar
+  enviado
+  bloqueado  // aprobado, pero el destinatario no está en los dominios permitidos (modo prueba)
+  descartado
+}
+
+model Reclamo {
+  id             String         @id @default(cuid())
+  mensajeId      String         @unique // el correo del proveedor en AgentMail
+  hiloId         String
+  remitente      String         // a quien se le responde, y a nadie más
+  asunto         String
+  texto          String         @db.Text
+  recibidoEn     DateTime
+  proveedorId    String?
+  proveedor      Proveedor?     @relation(fields: [proveedorId], references: [id])
+  identificacion Identificacion
+  facturaId      String?
+  factura        Factura?       @relation(fields: [facturaId], references: [id])
+  tipo           TipoCaso
+  esError        Boolean        @default(false)
+  lectura        Json?          // lo que entendió el modelo del correo
+  rastreo        Json?          // la foto de la cadena y el cálculo cuando se procesó
+  explicacion    String?        @db.Text // la explicación interna (código)
+  respuesta      String         @db.Text // la respuesta propuesta al proveedor
+  respuestaOriginal String?     @db.Text // la del agente, si una persona la editó
+  avisos         String[]       // lo que la persona tiene que mirar antes de aprobar
+  estado         EstadoReclamo  @default(por_aprobar)
+  envioDirecto   Boolean        @default(false)
+  aprobadoPor    String?
+  aprobadoEn     DateTime?
+  respuestaId    String?        // el mensaje que salió
+  createdAt      DateTime       @default(now())
+
+  pendientes Pendiente[]
+  eventos    Evento[]
+
+  @@index([estado, createdAt])
+}
+
+enum Area {
+  almacen   // entrada de mercancías
+  obra      // HES (residente)
+  direccion // liberaciones (director de obra)
+  cxp       // causación y retenciones
+  compras   // pedidos
+}
+
+enum EstadoPendiente {
+  abierto
+  cerrado
+}
+
+model Pendiente {
+  id           String          @id @default(cuid())
+  reclamoId    String?
+  reclamo      Reclamo?        @relation(fields: [reclamoId], references: [id], onDelete: SetNull)
+  facturaId    String?
+  factura      Factura?        @relation(fields: [facturaId], references: [id], onDelete: SetNull)
+  area         Area
+  responsable  String
+  correo       String
+  titulo       String
+  detalle      String          @db.Text
+  estado       EstadoPendiente @default(abierto)
+  avisoId      String?         // el aviso que salió por correo, si salió
+  avisadoEn    DateTime?
+  cerradoPor   String?
+  cerradoEn    DateTime?
+  nota         String?         @db.Text
+  createdAt    DateTime        @default(now())
+
+  @@index([estado, area])
+}
+
+/// Qué tipos de caso pueden salir sin aprobación. Todo nace apagado y lo prende el administrador.
+model ReglaEnvio {
+  tipo           TipoCaso @id
+  envioDirecto   Boolean  @default(false)
+  actualizadoPor String?
+  updatedAt      DateTime @updatedAt
+}
+
+/// Todo correo que entra o sale del buzón del agente.
+model Correo {
+  id         String   @id @default(cuid())
+  mensajeId  String   @unique
+  hiloId     String?
+  direccion  String   // entrante | saliente
+  de         String
+  para       String
+  asunto     String
+  resumen    String?  @db.Text
+  procesado  Boolean  @default(false)
+  reclamoId  String?
+  recibidoEn DateTime @default(now())
+}
+
+/// La bitácora. Cada cosa que hace el agente o una persona.
+model Evento {
+  id          String   @id @default(cuid())
+  actor       Actor
+  tipo        String   // reclamo.recibido, reclamo.aprobado, causacion.lote, ica.editada…
+  descripcion String
+  datos       Json?
+  facturaId   String?
+  factura     Factura? @relation(fields: [facturaId], references: [id], onDelete: SetNull)
+  reclamoId   String?
+  reclamo     Reclamo? @relation(fields: [reclamoId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/* ── Acceso ─────────────────────────────────────────────────────────── */
+
+enum Rol {
+  admin     // todo, más usuarios y las reglas de envío
+  cxp       // cuentas por pagar: aprueba respuestas, causa, edita el ICA, cierra pendientes
+  tesoreria // ve pagos y pendientes
+  consulta  // solo ver
+}
+
+model Usuario {
+  id               String    @id @default(cuid())
+  correo           String    @unique
+  nombre           String
+  rol              Rol       @default(consulta)
+  hash             String
+  activo           Boolean   @default(true)
+  debeCambiarClave Boolean   @default(true)
+  ultimoIngreso    DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  sesiones Sesion[]
+}
+
+model Sesion {
+  id        String   @id @default(cuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiraEn  DateTime
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId])
+}
+
+model IntentoIngreso {
+  id        String   @id @default(cuid())
+  correo    String
+  exito     Boolean
+  createdAt DateTime @default(now())
+
+  @@index([correo, createdAt])
+}

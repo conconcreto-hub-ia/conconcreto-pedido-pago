@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Factura electrónica de DEMOSTRACIÓN · no es un documento tributario real -->
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:UBLVersionID>UBL 2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>10</cbc:CustomizationID>
+  <cbc:ProfileID>DIAN 2.1: Factura Electrónica de Venta</cbc:ProfileID>
+  <cbc:ID>LAD2210</cbc:ID>
+  <cbc:UUID schemeID="1" schemeName="CUFE-SHA384">d476391ba55d0652f54b43cc5f0088ee9d9e66a1d41353b2011173c9cebc953d7b729547ffc8762f747ca7c7ed6d58a4</cbc:UUID>
+  <cbc:IssueDate>2026-10-09</cbc:IssueDate>
+  <cbc:IssueTime>10:00:00-05:00</cbc:IssueTime>
+  <cbc:DueDate>2026-11-08</cbc:DueDate>
+  <cbc:InvoiceTypeCode>01</cbc:InvoiceTypeCode>
+  <cbc:Note>Material entregado en obra el 7 de octubre de 2026 · remisión 7731.</cbc:Note>
+  <cbc:DocumentCurrencyCode>COP</cbc:DocumentCurrencyCode>
+  <cbc:LineCountNumeric>2</cbc:LineCountNumeric>
+  <cac:OrderReference><cbc:ID>4500129015</cbc:ID></cac:OrderReference>
+  <cac:AccountingSupplierParty>
+    <cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+    <cac:Party>
+      <cac:PartyName><cbc:Name>SUMINISTROS Y MONTAJES LA LADERA S.A.S.</cbc:Name></cac:PartyName>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>SUMINISTROS Y MONTAJES LA LADERA S.A.S.</cbc:RegistrationName>
+        <cbc:CompanyID schemeAgencyID="195" schemeID="2" schemeName="31">901377219</cbc:CompanyID>
+        <cbc:TaxLevelCode listName="48">O-13</cbc:TaxLevelCode>
+        <cac:RegistrationAddress>
+          <cbc:CityName>Rionegro</cbc:CityName>
+          <cbc:CountrySubentity>Antioquia</cbc:CountrySubentity>
+          <cac:AddressLine><cbc:Line>Carrera 55 No. 41 - 18, zona industrial El Tablazo</cbc:Line></cac:AddressLine>
+          <cac:Country><cbc:IdentificationCode>CO</cbc:IdentificationCode></cac:Country>
+        </cac:RegistrationAddress>
+        <cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:IndustryClassificationCode>4322</cac:IndustryClassificationCode>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cbc:AdditionalAccountID>1</cbc:AdditionalAccountID>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:RegistrationName>CONSTRUCTORA CONCONCRETO S.A.</cbc:RegistrationName>
+        <cbc:CompanyID schemeAgencyID="195" schemeID="8" schemeName="31">890901110</cbc:CompanyID>
+        <cac:RegistrationAddress>
+          <cbc:CityName>Medellín</cbc:CityName>
+          <cbc:CountrySubentity>Antioquia</cbc:CountrySubentity>
+          <cac:AddressLine><cbc:Line>Carrera 43A No. 18 Sur - 135, piso 4</cbc:Line></cac:AddressLine>
+        </cac:RegistrationAddress>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:PaymentMeans><cbc:ID>2</cbc:ID><cbc:PaymentMeansCode>42</cbc:PaymentMeansCode><cbc:PaymentDueDate>2026-11-08</cbc:PaymentDueDate></cac:PaymentMeans>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="COP">3131580.00</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="COP">16482000.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="COP">3131580.00</cbc:TaxAmount>
+      <cac:TaxCategory><cbc:Percent>19.00</cbc:Percent><cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme></cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="COP">16482000.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="COP">16482000.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="COP">19613580.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="COP">19613580.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="UN">300</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">12450000.00</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="COP">2365500.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="COP">12450000.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="COP">2365500.00</cbc:TaxAmount>
+        <cac:TaxCategory><cbc:Percent>19.00</cbc:Percent><cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme></cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item><cbc:Description>Tubería PVC presión 2&quot; RDE 21 x 6 m</cbc:Description></cac:Item>
+    <cac:Price><cbc:PriceAmount currencyID="COP">41500.00</cbc:PriceAmount><cbc:BaseQuantity unitCode="UN">1</cbc:BaseQuantity></cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="UN">24</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="COP">4032000.00</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="COP">766080.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="COP">4032000.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="COP">766080.00</cbc:TaxAmount>
+        <cac:TaxCategory><cbc:Percent>19.00</cbc:Percent><cac:TaxScheme><cbc:ID>01</cbc:ID><cbc:Name>IVA</cbc:Name></cac:TaxScheme></cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item><cbc:Description>Válvula de compuerta 2&quot; en bronce</cbc:Description></cac:Item>
+    <cac:Price><cbc:PriceAmount currencyID="COP">168000.00</cbc:PriceAmount><cbc:BaseQuantity unitCode="UN">1</cbc:BaseQuantity></cac:Price>
+  </cac:InvoiceLine>
+</Invoice>
